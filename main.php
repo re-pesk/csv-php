@@ -9,20 +9,26 @@ zzz,,""
 ,3,
 ';
 
-$csv = preg_replace('/[\n\r]+$/', "", $csv );
+echo "\n";
+echo "Input:\n\n"; var_export($csv); echo "\n\n\n";
 
-$cr = '\r';
-$lf = '\n';
-$comma = '\x2c';
-$dquote = '\x22';
-$allowed_chars = '[\x20-\x21\x23-\x2B\x2D-\x7E]';
+$csv = preg_replace('/[\n\r]+$/', "", $csv);
 
-$eol = '(?:' . $cr . $lf . '|' . $cr . '|' . $lf . ')';
-$double_dquote = $dquote . '{2}';
-$non_escaped = $allowed_chars . '+';
-$escaped = $dquote . '(?:' . $allowed_chars . '|' .  $comma . '|' . $eol . '|' . $double_dquote . ')*' . $dquote;
-$pattern = '/(' . $comma . '|' . $eol . '|^)((?:' . $escaped . '|' . $non_escaped . ')?)/m';
-preg_match_all($pattern, $csv, $out, PREG_SET_ORDER);
+const CR = '\x0D';
+const LF = '\x0A';
+const COMMA = '\x2C';
+const DQUOTE = '\x22';
+const TEXTDATA = '[\x20-\x21\x23-\x2B\x2D-\x7E]';
+
+const CRLF = CR . LF;
+const EOL = '(?:' . CRLF . '|' . CR . '|' . LF . ')';
+const DOUBLE_DQUOTE = DQUOTE . '{2}';
+
+const NON_ESCAPED = TEXTDATA . '+';
+const ESCAPED = DQUOTE . '(?:' . TEXTDATA . '|' .  COMMA . '|' . EOL . '|' . DOUBLE_DQUOTE . ')*' . DQUOTE;
+const CSV_PATTERN = '/(' . COMMA . '|' . EOL . '|^)((?:' . ESCAPED . '|' . NON_ESCAPED . ')?)/m';
+
+preg_match_all(CSV_PATTERN, $csv, $out, PREG_SET_ORDER);
 
 //echo '$out = '; var_export($out); echo "\n\n";
 
@@ -49,4 +55,4 @@ function createTree($out, $with_header = false)
 
 $tree = createTree($out, true);
 
-echo '$tree = '; var_export($tree); echo "\n\n";
+echo "Output:\n\n"; var_export($tree); echo "\n\n";
