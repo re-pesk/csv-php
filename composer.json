@@ -1,0 +1,12 @@
+{
+    "name": "re-pe/csv-php",
+    "description": "CSV converter to some other formats",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Rėdas Peškaitis",
+            "email": "redas.peskaitis@gmail.com"
+        }
+    ],
+    "require": {}
+}
