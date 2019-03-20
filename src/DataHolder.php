@@ -4,7 +4,7 @@ namespace CsvConverter;
 
 use CsvConverter\CsvParser;
 
-class CsvConverter {
+class DataHolder {
     private $data_tree = null;
     private $converter = null;
 
