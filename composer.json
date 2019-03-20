@@ -8,5 +8,10 @@
             "email": "redas.peskaitis@gmail.com"
         }
     ],
-    "require": {}
+    "autoload": {
+        "psr-4": {
+            "CsvConverter\\": "src/"
+        }
+    },
+    "license": "ISC"
 }

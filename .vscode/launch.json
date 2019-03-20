@@ -12,10 +12,10 @@
       "port": 9000
     },
     {
-      "name": "Launch main.php",
+      "name": "Launch index.php",
       "type": "php",
       "request": "launch",
-      "program": "${workspaceRoot}/main.php",
+      "program": "${workspaceRoot}/index.php",
       "ignore": ["**/vendor/**/*.php"],
       "cwd": "${fileDirname}",
       "port": 9000
