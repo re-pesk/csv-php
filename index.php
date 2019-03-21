@@ -14,10 +14,10 @@ zzz,,""
 ';
 
 echo "\n";
-echo "Input:\n\n"; var_export($csv); echo "\n\n\n";
+echo "Input:\n\n"; var_export($csv); echo "\n\n";
 
 $dataHolder = DataHolder(CsvParser(true), JsonConverter());
 $dataHolder->csv = $csv;
 
-echo "Data Tree:\n\n"; var_export($dataHolder->dataTree); echo "\n\n";
-echo "JSON:\n\n";      var_export($dataHolder->json);     echo "\n\n";
+echo "Data Tree:\n\n"; var_dump($dataHolder->dataTree); echo "\n\n";
+echo "JSON:\n\n";      var_dump($dataHolder->json);     echo "\n\n";
