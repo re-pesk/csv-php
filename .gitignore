@@ -31,3 +31,5 @@ nbdist/
 .history
 
 # End of https://www.gitignore.io/api/composer,netbeans,visualstudiocode
+
+ tempCodeRunnerFile.php
