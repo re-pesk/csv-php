@@ -11,7 +11,10 @@
     "autoload": {
         "psr-4": {
             "CsvConverter\\": "src/"
-        }
+        },
+        "files": [
+            "src/helper_functions.php"
+        ]
     },
     "license": "ISC"
 }

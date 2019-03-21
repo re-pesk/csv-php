@@ -2,7 +2,7 @@
 
 require __DIR__ . '/vendor/autoload.php';
 
-use CsvConverter\DataHolder;
+use function CsvConverter\{DataHolder, CsvParser, JsonConverter};
 
 $csv = 'field_name_1,"Field
 Name 2",field_name_3 
@@ -16,13 +16,8 @@ zzz,,""
 echo "\n";
 echo "Input:\n\n"; var_export($csv); echo "\n\n\n";
 
-$dataHolder = new DataHolder();
-$dataHolder->inputCsv($csv, true);
+$dataHolder = DataHolder(CsvParser(true), JsonConverter());
+$dataHolder->csv = $csv;
 
-$tree = $dataHolder->dataTree;
-
-echo "Data Tree:\n\n"; var_export($tree); echo "\n\n";
-
-$json = $dataHolder->json;
-
-echo "JSON:\n\n"; var_export($json); echo "\n\n";
+echo "Data Tree:\n\n"; var_export($dataHolder->dataTree); echo "\n\n";
+echo "JSON:\n\n";      var_export($dataHolder->json);     echo "\n\n";
