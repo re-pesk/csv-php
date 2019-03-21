@@ -16,6 +16,10 @@ const NON_ESCAPED = TEXTDATA . '+';
 const ESCAPED = DQUOTE . '(?:' . TEXTDATA . '|' .  COMMA . '|' . EOL . '|' . DOUBLE_DQUOTE . ')*' . DQUOTE;
 const CSV_PATTERN = '/(' . COMMA . '|' . EOL . '|^)((?:' . ESCAPED . '|' . NON_ESCAPED . ')?)/m';
 
+const SIGN = '[+-]?';
+const DIGITS = '[0-9]+';
+const INTEGER = SIGN . DIGITS;
+
 class CsvParser implements Parser
 {
     private $with_header = false; 
@@ -55,10 +59,24 @@ class CsvParser implements Parser
                     $record_no++;
                 }
             }
-            if($record_no < 0){
-                $tree['header'][] = $each[2];
+
+            $value = null;
+
+            if(is_numeric($each[2])){
+                if(preg_match('/^' . INTEGER . '$/', $each[2])){
+                    $value = intval($each[2]);
+                } else {
+                    $value = floatval($each[2]);
+                }
+            } elseif(is_string($each[2])){
+                $value = preg_replace(['/^"/', '/"$/', '/""/'], ['', '', '"'], $each[2]);
             } else {
-                $tree['records'][$record_no][] = $each[2];
+                $value = $each[2];
+            }
+            if($record_no < 0){
+                $tree['header'][] = $value;
+            } else {
+                $tree['records'][$record_no][] = $value;
             }
         });
         return $tree;
