@@ -71,24 +71,5 @@ class DataHolder {
             );
         }
     }
-  
-    public function inputCsv($data, $with_header = false)
-    {
-        
-        $this->data_tree = $this->converter->makeDataTree($data, $with_header);
-    }
-
-    public function inputJson($data)
-    {
-        $this->data_tree = json_decode($data);
-    }
-
-    private function tree2json(){
-        return json_encode($this->data_tree, JSON_PRETTY_PRINT);
-    }
-  
-    private function tree2csv(){
-        return $this->data_tree;
-    }
 
 }
