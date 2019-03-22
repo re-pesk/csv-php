@@ -22,11 +22,13 @@ const INTEGER = SIGN . DIGITS;
 
 class CsvParser implements Parser
 {
-    private $with_header = false; 
+    private $with_header = false;
+    private $with_null = false;
 
-    public function __construct(bool $with_header = false)
+    public function __construct(bool $with_header = false, bool $with_null = false)
     {
         $this->withHeader($with_header);
+        $this->withNull($with_null);
     }
 
     public static function inputType() : string
@@ -39,6 +41,11 @@ class CsvParser implements Parser
         $this->with_header = $with_header;
     }
 
+    public function withNull(bool $with_null)
+    {
+        $this->with_null = $with_null;
+    }
+
     private function tokenize($data)
     {
         $data = preg_replace('/[\n\r]+$/', "", $data);
@@ -47,10 +54,12 @@ class CsvParser implements Parser
         return $tokens;
     }
 
-    private function tokensToDataTree($tokens, $with_header = false)
+    private function tokensToDataTree($tokens)
     {
         $tree = [];
-        array_walk($tokens, function($each) use (&$tree, &$with_header) {
+        $with_header = $this->with_header;
+        $with_null = $this->with_null;
+        array_walk($tokens, function($each) use (&$tree, &$with_header, $with_null) {
             static $record_no = -1;
             if($each[1] !== ','){
                 if($with_header){
@@ -69,7 +78,9 @@ class CsvParser implements Parser
                     $value = floatval($each[2]);
                 }
             } elseif(is_string($each[2])){
-                $value = preg_replace(['/^"/', '/"$/', '/""/'], ['', '', '"'], $each[2]);
+                if(!$with_null || !preg_match('/^$/', $each[2])){
+                    $value = preg_replace(['/^"/', '/"$/', '/""/'], ['', '', '"'], $each[2]);
+                }
             } else {
                 $value = $each[2];
             }
@@ -85,7 +96,7 @@ class CsvParser implements Parser
     public function makeDataTree(string $data)
     {
         $tokens = $this->tokenize($data);
-        $dataTree = $this->tokensToDataTree($tokens, $this->with_header);
+        $dataTree = $this->tokensToDataTree($tokens);
         return $dataTree;
     }
 

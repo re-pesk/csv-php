@@ -16,6 +16,8 @@ zzz,,""
 echo "\n";
 echo "Input:\n\n"; var_export($csv); echo "\n\n";
 
+// CsvParser($with_header = true, $with_null = false)
+
 $dataHolder = DataHolder(CsvParser(true), JsonConverter());
 $dataHolder->csv = $csv;
 
