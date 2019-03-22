@@ -48,11 +48,8 @@ class DataHolder {
         } elseif(isset($this->converter_list[$key])){
             return $this->converter_list[$key]->convert($this);
         } else {
-            throw new InvalidArgumentException(
-                sprintf(
-                    '"%s" is not a valid preperty name',
-                    $key
-                )
+            throw new \InvalidArgumentException(
+                "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid preperty name\n"
             );
         }
         return null;
@@ -63,11 +60,8 @@ class DataHolder {
         if(isset($this->parser_list[$key])){
             $this->data_tree = $this->parser_list[$key]->makeDataTree($value);
         } else {
-            throw new InvalidArgumentException(
-                sprintf(
-                    '"%s" is not a valid preperty name',
-                    $key
-                )
+            throw new \InvalidArgumentException(
+                "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid preperty name\n"
             );
         }
     }
