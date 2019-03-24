@@ -9,7 +9,7 @@ Name 2",field_name_3
 "aaa","b 
 ,bb","ccc""ddd"
 zzz,,""
-1,2,
+1,2.2,
 ,3,
 ';
 
