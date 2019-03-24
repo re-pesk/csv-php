@@ -2,23 +2,23 @@
 
 namespace CsvConverter;
 
-const CR = '\x0D';
-const LF = '\x0A';
-const COMMA = '\x2C';
-const DQUOTE = '\x22';
-const TEXTDATA = '[\x20-\x21\x23-\x2B\x2D-\x7E]';
+const CR = '\r';
+const LF = '\n';
+const COMMA = ',';
+const DQUOTE = '"';
+const TEXTDATA = '[ -!]|[#-+]|[--~]';
 
 const CRLF = CR . LF;
-const EOL = '(?:' . CRLF . '|' . CR . '|' . LF . ')';
+const EOL = CRLF . '|' . CR . '|' . LF;
 const DOUBLE_DQUOTE = DQUOTE . '{2}';
 
 const NON_ESCAPED = TEXTDATA . '+';
-const ESCAPED = DQUOTE . '(?:' . TEXTDATA . '|' .  COMMA . '|' . EOL . '|' . DOUBLE_DQUOTE . ')*' . DQUOTE;
+const ESCAPED = DQUOTE . '(?:' . TEXTDATA . '|' .  COMMA . '|' . CR . '|' . LF . '|' . DOUBLE_DQUOTE . ')*' . DQUOTE;
 const CSV_PATTERN = '/(' . COMMA . '|' . EOL . '|^)((?:' . ESCAPED . '|' . NON_ESCAPED . ')?)/m';
 
 const SIGN = '[+-]?';
 const DIGITS = '[0-9]+';
-const INTEGER = SIGN . DIGITS;
+const INT_PATTERN = SIGN . DIGITS;
 
 class CsvParser implements Parser
 {
@@ -72,7 +72,7 @@ class CsvParser implements Parser
             $value = null;
 
             if(is_numeric($each[2])){
-                if(preg_match('/^' . INTEGER . '$/', $each[2])){
+                if(preg_match('/^' . INT_PATTERN . '$/', $each[2])){
                     $value = intval($each[2]);
                 } else {
                     $value = floatval($each[2]);
