@@ -39,11 +39,39 @@ class CsvParser implements Parser
     public function withHeader(bool $with_header)
     {
         $this->with_header = $with_header;
+        return $this;
     }
 
     public function withNull(bool $with_null)
     {
         $this->with_null = $with_null;
+        return $this;
+    }
+
+    public function __get($key)
+    {
+        switch($key){
+            case 'withHeader': return $this->with_header;
+            case 'withNull': return $this->with_null;
+            default: { 
+                throw new \InvalidArgumentException(
+                    "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid property name\n"
+                );
+            }
+        }
+    }
+
+    public function __set($key, $value)
+    {
+        switch($key){
+            case 'withHeader': $this->withHeader($value); break;
+            case 'withNull': $this->withNull($value); break;
+            default: { 
+                throw new \InvalidArgumentException(
+                    "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid property name\n"
+                );
+            }
+        }
     }
 
     private function tokenize($data)
