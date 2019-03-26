@@ -8,7 +8,6 @@ class DataHolder {
     private $parser_list = [];
     private $converter_list = [];
     private $data_tree = null;
-    private $converter = null;
 
     public function __construct(?Parser $parser = null, ?Converter $converter = null)
     {
