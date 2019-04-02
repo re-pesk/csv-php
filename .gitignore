@@ -32,4 +32,10 @@ nbdist/
 
 # End of https://www.gitignore.io/api/composer,netbeans,visualstudiocode
 
- tempCodeRunnerFile.php
+### Visual Studio Code
+# Ignore temporary files
+tempCodeRunnerFile.php
+
+### CollabNet GitEye
+# Ignore project folder
+/.project
