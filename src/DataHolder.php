@@ -45,7 +45,7 @@ class DataHolder {
         if($key == "dataTree") {
             return $this->data_tree;
         } elseif(isset($this->converter_list[$key])){
-            return $this->converter_list[$key]->convert($this);
+            return $this->converter_list[$key]->convert($this->data_tree);
         } else {
             throw new \InvalidArgumentException(
                 "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid preperty name\n"
@@ -63,6 +63,17 @@ class DataHolder {
                 "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid preperty name\n"
             );
         }
+    }
+
+    public function __call($key, $args) {
+        if(isset($this->converter_list[$key])){
+            return $this->converter_list[$key]->convert($this->data_tree, ...$args);
+        } else {
+            throw new \InvalidArgumentException(
+                "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid preperty name\n"
+            );
+        }
+        return null;
     }
 
 }
