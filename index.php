@@ -4,6 +4,29 @@ require __DIR__ . '/vendor/autoload.php';
 
 use function CsvConverter\{DataHolder, CsvParser, JsonConverter};
 
+$csvParser = CsvParser()->withHeader(true)->withNull(true)->autoCheck(true);
+
+$csvList = [
+  1 => "a,b,c\r\nzzz,\",\r\n\"\r\n2,,",
+  0 => "a,b,c\r\nzzz,,\",\r\n\"2,,",
+  2 => "a,b,c\r\nzzz,,,\",\r\n\"\r\n2,,",
+  3 => "a,b,c\r\nzzz,,\",\r\n\"\r\n2,",
+  4 => "a,b,c\r\nzzz,, \"\n\"\r\n2,,",
+  5 => "a,b,c\r\nzzz,,\"\r\"\n\r\n2,,",
+];
+
+array_walk($csvList, function($csv, $i) use ($csvParser) {
+  $i++;
+  echo "Test #{$i}:\n\n";
+  echo "Input:\n\n"; var_export($csv); echo "\n\n";
+  try {
+    $str = var_export($csvParser->makeDataTree($csv), true);
+    echo "Data Tree:\n\n", $str, "\n\n";
+  } catch (Exception $e) {
+    echo "Error:\n\n", $e->getMessage(), "\n\n";
+  }
+});
+
 $csv = 'field_name_1,"Field
 Name 2",\rfield_name_3\n 
 aaa,"b 
@@ -13,45 +36,16 @@ zzz,,""
 ,3,
 ';
 
-$tokens = [];
-
-const CR = '\r'; // '\x0D'
-const LF = '\n'; // '\x0A'
-const START = '^';
-const COMMA = ',';
-const DQUOTE = '"';
-const CHARS = '[\x20-\xFE]';
-const TEXTDATA = '(?:(?![' . DQUOTE . COMMA . '\x7F' . '])' . CHARS . ')';
-
-const CRLF = CR . LF;
-const CR_NOT_LF = CR . '(?!' . LF . ')';
-const EOL = CRLF . '|' . CR . '|' . LF;
-const DOUBLE_DQUOTE = DQUOTE . '{2}';
-
-const NON_ESCAPED = '(?:' . CR_NOT_LF . '|' . TEXTDATA . ')' . '+';
-
-const ESCAPED = DQUOTE . '(?:' . DOUBLE_DQUOTE . '|' . TEXTDATA . '|' .  COMMA . '|' . CR . '|' . LF . ')*' . DQUOTE;
-const HEAD = '(?:' . CRLF . '|' . COMMA . '|' . START . ')';
-const TAIL = '(?:' . DQUOTE . '|' . CR_NOT_LF . '|[^' . CR . COMMA . '])*';
-const BODY = '(?:' . ESCAPED . '|' . NON_ESCAPED . '|)';
-
-const CSV_PATTERN = '/(' . HEAD . ')(' . BODY . ')(' . TAIL . ')/x';
-
-preg_match_all('/(' . HEAD . ')(' . BODY . ')(' . TAIL . ')/', $csv, $tokens, PREG_SET_ORDER);
-echo "tokens:\n\n"; var_dump($tokens); echo "\n\n";
-
 echo "\n";
 echo "Input:\n\n"; var_export($csv); echo "\n\n";
 
-// CsvParser($with_header = true, $with_null = false)
-
-preg_match_all(CSV_PATTERN, $csv, $tokens, PREG_SET_ORDER);
-// echo "tokens:\n\n"; var_dump($tokens); echo "\n\n";
-
-
-$dataHolder = DataHolder(CsvParser()->withHeader(true)->withNull(true), JsonConverter());
+$csvParser = CsvParser()->withHeader(true)->withNull(true)->autoCheck(true);
+$dataHolder = DataHolder(CsvParser()->withHeader(true)->withNull(true)->autoCheck(true), JsonConverter());
 $dataHolder->csv = $csv;
 
+echo "Records:\n\n"; array_walk($csvParser->getRecords($csv), function($record){
+  var_dump($record);
+}); echo "\n\n";
 echo "Data Tree:\n\n"; var_dump($dataHolder->dataTree); echo "\n\n";
 echo "JSON:\n\n";      var_dump($dataHolder->json); //    echo "\n\n"; $dataHolder->json(JSON_PRETTY_PRINT)
 
