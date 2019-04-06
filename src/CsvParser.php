@@ -16,14 +16,15 @@ const CR_NOT_LF = CR . '(?!' . LF . ')';
 const EOL = CRLF . '|' . CR . '|' . LF;
 const DOUBLE_DQUOTE = DQUOTE . '{2}';
 
-const NON_ESCAPED = '(?:' . CR_NOT_LF . '|' . TEXTDATA . ')' . '+';
+const NON_ESCAPED = '(?:' . CR_NOT_LF . '|' . LF . '|' .TEXTDATA . ')' . '+';
 
 const ESCAPED = DQUOTE . '(?:' . DOUBLE_DQUOTE . '|' . TEXTDATA . '|' .  COMMA . '|' . CR . '|' . LF . ')*' . DQUOTE;
 const HEAD = '(?:' . CRLF . '|' . COMMA . '|' . START . ')';
 const TAIL = '(?:' . DQUOTE . '|' . CR_NOT_LF . '|[^' . CR . COMMA . '])*';
 const BODY = '(?:' . ESCAPED . '|' . NON_ESCAPED . '|)';
 
-const CSV_PATTERN = '/(' . HEAD . ')(' . BODY . ')(' . TAIL . ')/mx';
+const CSV_PATTERN = '/(?:' . HEAD . ')(?:' . BODY . ')(?:' . TAIL . ')/x';
+const RECORD_PATTERN = '/^(' . HEAD . ')(' . BODY . ')(' . TAIL . ')$/x';
 
 const SIGN = '[+-]?';
 const DIGITS = '[0-9]+';
@@ -34,15 +35,22 @@ const EMPTY_PATTERN = '/^$/';
 const OUTER_QUOTES = '/^"|"$/';
 const INNER_QUOTES = '/""/';
 
+function splitTokenToParts($token)
+{
+    preg_match(RECORD_PATTERN, $token[0][0], $parts, PREG_OFFSET_CAPTURE);
+    $parts[0][1] = $token[0][1];
+    return $parts;
+}
+
 function tokenize($data)
 {
     $data = preg_replace('/' . CRLF . '\h*$/', "", $data);
     preg_match_all(CSV_PATTERN, $data, $tokens, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
-
+    $tokens = array_map('CsvConverter\splitTokenToParts', $tokens);
     return $tokens;
 }
 
-function convertValue($value, $withNull) {
+function convertValue($value, bool $withNull) {
     if (is_null($value)){
         return $value;
     }
@@ -62,65 +70,71 @@ function convertValue($value, $withNull) {
     return preg_replace(INNER_QUOTES, '"', $value);
 }  
 
-function tokensToDataTree($tokens, $withHeader, $withNull)
+function tokensToRecords(array $tokens)
 {
     $records = [];
-    $branch = $withHeader ? 'header' : 'first record';
-    $fieldsCount = 0;
-    array_walk($tokens, function($token) use (&$records, &$fieldsCount, $withNull, $branch) {
-        static $fieldNo = 0;
-        if ($token[3][0] !== '') {
-            throw new \UnexpectedValueException("'{$token[3][0]}': corrupted end of field '{$token[0][0]}' starting at {$token[3][1]} character!");
-        }
-        $recordsCount = count($records);
+ 
+    array_walk($tokens, function(&$token) use (&$records) {
         if($token[1][0] !== ','){
-            if ($recordsCount == 1) {
-                $fieldsCount = count($records[0]);
-            }
-            if ($recordsCount > 1 && count($records[$recordsCount - 1]) < $fieldsCount) {
-                throw new RangeException(`Error occured before field '{$token[0][0]}' started at {$token[0][0]} character: last record has less fields than {$branch}!`);
-            }
-            array_push($records, []);
-            $recordsCount++;
-            $fieldNo = 1;
+            array_push($records, [$token]);
+        } else {
+            $records[count($records) - 1][] = $token;
         }
-
-        if ($recordsCount > 1) {
-            if ($fieldNo > $fieldsCount) {
-              throw new RangeException(`Index of curent field '{$token[0][0]}' started at {$token[0][1]} character is greater then number of fields in {$branch}!`);
-            }
-        }
-
-        $value = null;
-        $value = convertValue($token[2][0], $withNull);
-        $records[$recordsCount - 1][] = $value;
-        $fieldNo += 1;
     });
-    if (count($records[count($records) - 1]) < $fieldsCount) {
-        throw new RangeError(`Last record has less fields than ${branch}!`);
-    }
-    
-    $tree = [];
-    if ($withHeader) {
-    $tree['header'] = array_shift($records);
-    }
-    if (count($records) > 0) {
-    $tree['records'] = $records;
-    }
-    
-    return $tree;
+
+
+    return $records;
 }
 
+function checkRecords($records) : bool {
+    if (count($records) < 1) {
+        return false;
+    }
+    $fieldCount = count($records[0]);
+
+    array_walk($records, function($record, $i) use ($fieldCount) {
+        $recordNo = $i + 1;
+        $currentFieldCount = count($record);
+        if ($recordNo > 0){
+            if ($currentFieldCount > $fieldCount){
+                throw new \RangeException("#{$recordNo} record has more fields than first record!");
+            } elseif (($currentFieldCount < $fieldCount)) {
+                throw new \RangeException("#{$recordNo} record has less fields than first record!");
+            }
+        }
+        if ($currentFieldCount > 0) {
+            array_walk($record, function($field, $fieldNo) use ($recordNo) {
+                if ($field[3][0] !== '') {
+                    $replaced = preg_replace(['/\r/', '/\n/'], ['\\r', '\\n'], [$field[0][0], $field[3][0]]);
+                    throw new \UnexpectedValueException("Record {$recordNo}, field {$fieldNo}: '{$replaced[0]}' has corrupted ending '{$replaced[1]}' at position {$field[3][1]}!");
+                };
+            });
+        }
+    });
+    return true;
+};
+
+function convertRecordsToDataTree(array $records, bool $withHeader = false, bool $withNull = false) : array
+{
+    $tree = array_map(function($record) use ($withNull){
+        return array_map(function($field) use ($withNull){
+            return convertValue($field[2][0], $withNull);
+        }, $record);
+    }, $records);
+    return $tree;
+};
 
 class CsvParser implements Parser
 {
     private $with_header = false;
     private $with_null = false;
+    private $auto_check = false;
 
-    public function __construct(bool $with_header = false, bool $with_null = false)
+    public function __construct(bool $with_header = false, bool $with_null = false, bool $auto_check = false)
     {
         $this->withHeader($with_header);
         $this->withNull($with_null);
+        $this->autoCheck($auto_check);
     }
 
     public static function inputType() : string
@@ -140,11 +154,18 @@ class CsvParser implements Parser
         return $this;
     }
 
+    public function autoCheck(bool $autocheck_null)
+    {
+        $this->auto_check = $autocheck_null;
+        return $this;
+    }
+
     public function __get($key)
     {
         switch($key){
             case 'withHeader': return $this->with_header;
             case 'withNull': return $this->with_null;
+            case 'autoCheck': return $this->auto_check;
             default: { 
                 throw new \InvalidArgumentException(
                     "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid property name\n"
@@ -158,6 +179,7 @@ class CsvParser implements Parser
         switch($key){
             case 'withHeader': $this->withHeader($value); break;
             case 'withNull': $this->withNull($value); break;
+            case 'withNull': $this->autoCheck($value); break;
             default: { 
                 throw new \InvalidArgumentException(
                     "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid property name\n"
@@ -166,11 +188,21 @@ class CsvParser implements Parser
         }
     }
 
-    public function makeDataTree(string $data)
+    public function getRecords(string $data)
     {
         $tokens = tokenize($data);
-        $dataTree = tokensToDataTree($tokens, $this->withHeader, $this->withNull);
-        return $dataTree;
+        $records = tokensToRecords($tokens);
+        if ($this->autoCheck){
+            checkRecords($records);
+        }
+        return $records;
+    }
+
+    public function makeDataTree(string $data)
+    {
+        $records = $this->getRecords($data);
+        $tree = convertRecordsToDataTree($records, $this->withHeader, $this->withNull);
+        return $tree;
     }
 
 }
