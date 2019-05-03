@@ -16,5 +16,8 @@
             "src/helper_functions.php"
         ]
     },
-    "license": "ISC"
+    "license": "ISC",
+    "require-dev": {
+        "kahlan/kahlan": "^4.6"
+    }
 }
