@@ -6,14 +6,14 @@ use CsvConverter\DataHolder;
 use CsvConverter\CsvParser;
 use CsvConverter\JsonConverter;
 
-function DataHolder(?Parser $parser = null, ?Converter $converter = null)
-{
-    return new DataHolder($parser, $converter);
-}
-
 function CsvParser(bool $with_header = false, bool $with_null = false)
 {
     return new CsvParser($with_header, $with_null);
+}
+
+function DataHolder(?Parser $parser = null, ?Converter $converter = null)
+{
+    return new DataHolder($parser, $converter);
 }
 
 function JsonConverter()

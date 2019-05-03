@@ -86,35 +86,42 @@ function tokensToRecords(array $tokens)
     return $records;
 }
 
-function checkRecords($records) : bool {
+function checkRecords(array $records, bool $withHeader) : bool {
     if (count($records) < 1) {
         return false;
     }
     $fieldCount = count($records[0]);
 
-    array_walk($records, function($record, $i) use ($fieldCount) {
-        $recordNo = $i + 1;
-        $currentFieldCount = count($record);
+    array_walk($records, function(array $record, $recordNo) use ($fieldCount, $withHeader) {
+        array_walk($record, function(array $field, $fieldNo) use ($recordNo) {
+            if ($field[3][0] !== '') {
+                $replaced = preg_replace(['/\r/', '/\n/'], ['\\r', '\\n'], [$field[0][0], $field[3][0]]);
+                throw new \UnexpectedValueException("Record {$recordNo}, field {$fieldNo}: '{$replaced[0]}' has corrupted ending '{$replaced[1]}' at position {$field[3][1]}!");
+            };
+        });
+        if ($withHeader && $recordNo < 1) {
+            array_walk($record, function($field, $fieldNo) {
+                if ($field[2][0] === '') {
+                    throw new \UnexpectedValueException("Header of field {$fieldNo} is empty!");
+                }
+                if ($field[2][0] === '""') {
+                    throw new \UnexpectedValueException("Header of field {$fieldNo} is escaped empty string!");
+                }
+            });
+        }
         if ($recordNo > 0){
+            $currentFieldCount = count($record);
             if ($currentFieldCount > $fieldCount){
                 throw new \RangeException("#{$recordNo} record has more fields than first record!");
             } elseif (($currentFieldCount < $fieldCount)) {
                 throw new \RangeException("#{$recordNo} record has less fields than first record!");
             }
         }
-        if ($currentFieldCount > 0) {
-            array_walk($record, function($field, $fieldNo) use ($recordNo) {
-                if ($field[3][0] !== '') {
-                    $replaced = preg_replace(['/\r/', '/\n/'], ['\\r', '\\n'], [$field[0][0], $field[3][0]]);
-                    throw new \UnexpectedValueException("Record {$recordNo}, field {$fieldNo}: '{$replaced[0]}' has corrupted ending '{$replaced[1]}' at position {$field[3][1]}!");
-                };
-            });
-        }
     });
     return true;
 };
 
-function convertRecordsToDataTree(array $records, bool $withHeader = false, bool $withNull = false) : array
+function recordsToDataTree(array $records, bool $withNull = false) : array
 {
     $tree = array_map(function($record) use ($withNull){
         return array_map(function($field) use ($withNull){
@@ -188,20 +195,20 @@ class CsvParser implements Parser
         }
     }
 
-    public function getRecords(string $data)
+    public function makeRecords(string $data)
     {
         $tokens = tokenize($data);
         $records = tokensToRecords($tokens);
         if ($this->autoCheck){
-            checkRecords($records);
+            checkRecords($records, $this->withHeader);
         }
         return $records;
     }
 
     public function makeDataTree(string $data)
     {
-        $records = $this->getRecords($data);
-        $tree = convertRecordsToDataTree($records, $this->withHeader, $this->withNull);
+        $records = $this->makeRecords($data);
+        $tree = recordsToDataTree($records, $this->withNull);
         return $tree;
     }
 
