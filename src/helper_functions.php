@@ -2,13 +2,11 @@
 declare(strict_types=1);
 
 namespace CsvConverter;
-use CsvConverter\DataHolder;
-use CsvConverter\CsvParser;
-use CsvConverter\JsonConverter;
+use CsvConverter\{DataHolder, CsvParser, JsonConverter};
 
-function CsvParser(bool $with_header = false, bool $with_null = false)
+function CsvParser(array $parameters = [])
 {
-    return new CsvParser($with_header, $with_null);
+    return new CsvParser($parameters);
 }
 
 function DataHolder(?Parser $parser = null, ?Converter $converter = null)
