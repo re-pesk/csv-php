@@ -50,7 +50,7 @@ function tokenize($data)
     return $tokens;
 }
 
-function convertValue($value, bool $withNull) {
+function convertValue($value, bool $convertToNull) {
     if (is_null($value)){
         return $value;
     }
@@ -63,7 +63,7 @@ function convertValue($value, bool $withNull) {
     if (preg_match(INT_PATTERN, $value) > 0) {
         return intval($value);
     }
-    if ($withNull && preg_match(EMPTY_PATTERN, $value) > 0) {
+    if ($convertToNull && preg_match(EMPTY_PATTERN, $value) > 0) {
         return null;
     }
     $value = preg_replace(OUTER_QUOTES, '', $value);
@@ -86,20 +86,20 @@ function tokensToRecords(array $tokens)
     return $records;
 }
 
-function checkRecords(array $records, bool $withHeader) : bool {
+function checkRecords(array $records, bool $hasHeader) : bool {
     if (count($records) < 1) {
         return false;
     }
     $fieldCount = count($records[0]);
 
-    array_walk($records, function(array $record, $recordNo) use ($fieldCount, $withHeader) {
+    array_walk($records, function(array $record, $recordNo) use ($fieldCount, $hasHeader) {
         array_walk($record, function(array $field, $fieldNo) use ($recordNo) {
             if ($field[3][0] !== '') {
                 $replaced = preg_replace(['/\r/', '/\n/'], ['\\r', '\\n'], [$field[0][0], $field[3][0]]);
                 throw new \UnexpectedValueException("Record {$recordNo}, field {$fieldNo}: '{$replaced[0]}' has corrupted ending '{$replaced[1]}' at position {$field[3][1]}!");
             };
         });
-        if ($withHeader && $recordNo < 1) {
+        if ($hasHeader && $recordNo < 1) {
             array_walk($record, function($field, $fieldNo) {
                 if ($field[2][0] === '') {
                     throw new \UnexpectedValueException("Header of field {$fieldNo} is empty!");
@@ -121,11 +121,11 @@ function checkRecords(array $records, bool $withHeader) : bool {
     return true;
 };
 
-function recordsToDataTree(array $records, bool $withNull = false) : array
+function recordsToDataTree(array $records, bool $convertToNull = false) : array
 {
-    $tree = array_map(function($record) use ($withNull){
-        return array_map(function($field) use ($withNull){
-            return convertValue($field[2][0], $withNull);
+    $tree = array_map(function($record) use ($convertToNull){
+        return array_map(function($field) use ($convertToNull){
+            return convertValue($field[2][0], $convertToNull);
         }, $record);
     }, $records);
     return $tree;
@@ -133,15 +133,17 @@ function recordsToDataTree(array $records, bool $withNull = false) : array
 
 class CsvParser implements Parser
 {
-    private $with_header = false;
-    private $with_null = false;
-    private $auto_check = false;
+    private $parameters = [
+        'hasHeader' => false, 
+        'convertToNull' => false, 
+        'convertToNumber' => false, 
+        'preserveEmptyLine' => false, 
+        'ignoreInvalidChars' => false 
+    ];
 
-    public function __construct(bool $with_header = false, bool $with_null = false, bool $auto_check = false)
+    public function __construct(array $parameters = [])
     {
-        $this->withHeader($with_header);
-        $this->withNull($with_null);
-        $this->autoCheck($auto_check);
+        $this->setParameters($parameters);
     }
 
     public static function inputType() : string
@@ -149,34 +151,49 @@ class CsvParser implements Parser
         return 'csv';
     }
 
-    public function withHeader(bool $with_header)
+    private function getBooleanParameter($key) 
     {
-        $this->with_header = $with_header;
-        return $this;
+        if (!isset($this->parameters[$key])) {
+            throw new \InvalidArgumentException(
+                "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid property name!\n"
+            );
+        }
+        return $this->parameters[$key];
     }
 
-    public function withNull(bool $with_null)
+    private function setBooleanParameter(string $key, bool $value) 
     {
-        $this->with_null = $with_null;
-        return $this;
+        if (!\is_bool($value)) {
+            throw new \InvalidArgumentException(
+                "\n" . __METHOD__ . '.args["value"]: ' . "'{$key}' accepts only values of boolean type!\n"
+            );
+        }
+        if (!isset($this->parameters[$key])) {
+            throw new \InvalidArgumentException(
+                "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid property name!\n"
+            );
+        }
+        $this->parameters[$key] = $value;
     }
 
-    public function autoCheck(bool $autocheck_null)
-    {
-        $this->auto_check = $autocheck_null;
-        return $this;
+    private function setParameters(array $values)
+    {   
+        if (count($values) < 1) {
+            return;
+        }
+        forEach($this->parameters as $key => $value) {
+            if (isset($values[$key]) && $values[$key] !== $value) {
+                $this->setBooleanParameter($key, $values[$key]);
+            }
+        }
     }
 
     public function __get($key)
     {
         switch($key){
-            case 'withHeader': return $this->with_header;
-            case 'withNull': return $this->with_null;
-            case 'autoCheck': return $this->auto_check;
+            case 'parameters': return $this->parameters;
             default: { 
-                throw new \InvalidArgumentException(
-                    "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid property name\n"
-                );
+                return $this->getBooleanParameter($key);
             }
         }
     }
@@ -184,23 +201,25 @@ class CsvParser implements Parser
     public function __set($key, $value)
     {
         switch($key){
-            case 'withHeader': $this->withHeader($value); break;
-            case 'withNull': $this->withNull($value); break;
-            case 'withNull': $this->autoCheck($value); break;
+            case 'parameters': $this->setParameters($value); break;
             default: { 
-                throw new \InvalidArgumentException(
-                    "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid property name\n"
-                );
+                $this->setBooleanParameter($key, $value);
             }
         }
+    }
+
+    public function __call($key, $value)
+    {
+        $this->__set($key, $value[0]);
+        return $this;
     }
 
     public function makeRecords(string $data)
     {
         $tokens = tokenize($data);
         $records = tokensToRecords($tokens);
-        if ($this->autoCheck){
-            checkRecords($records, $this->withHeader);
+        if (!$this->ignoreInvalidChars){
+            checkRecords($records, $this->hasHeader);
         }
         return $records;
     }
@@ -208,7 +227,7 @@ class CsvParser implements Parser
     public function makeDataTree(string $data)
     {
         $records = $this->makeRecords($data);
-        $tree = recordsToDataTree($records, $this->withNull);
+        $tree = recordsToDataTree($records, $this->convertToNull);
         return $tree;
     }
 
