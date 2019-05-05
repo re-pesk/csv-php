@@ -3,8 +3,12 @@
 require __DIR__ . '/vendor/autoload.php';
 
 use function CsvConverter\{DataHolder, CsvParser, JsonConverter};
+use CsvConverter\JsonConverter;
 
-$csvParser = CsvParser()->withHeader(true)->withNull(true)->autoCheck(true);
+$jsonConverter = new JsonConverter();
+echo "\$jsonConverter->outputType() === '{$jsonConverter->outputType()}'\n";
+
+$csvParser = CsvParser()->parameters([ 'hasHeader' => true, 'convertToNull' => true, 'ignoreInvalidChars' => true ]);
 
 $csvList = [
   1 => "a,b,c\r\nzzz,\",\r\n\"\r\n2,,",
@@ -39,22 +43,24 @@ zzz,,""
 echo "\n";
 echo "Input:\n\n"; var_export($csv); echo "\n\n";
 
-$csvParser = CsvParser()->withHeader(true)->withNull(true)->autoCheck(true);
-$dataHolder = DataHolder(CsvParser()->withHeader(true)->withNull(true)->autoCheck(true), JsonConverter());
+$csvParser = CsvParser()->hasHeader(true)->convertToNull(true);
+$dataHolder = DataHolder($csvParser, JsonConverter());
 $dataHolder->csv = $csv;
 
-echo "Records:\n\n"; array_walk($csvParser->getRecords($csv), function($record){
+$records = $csvParser->makeRecords($csv);
+
+echo "Records:\n\n"; array_walk($records, function($record){
   var_dump($record);
 }); echo "\n\n";
-echo "Data Tree:\n\n"; var_dump($dataHolder->dataTree); echo "\n\n";
+echo "Data Tree:\n\n"; var_export($dataHolder->dataTree); echo "\n\n";
 echo "JSON:\n\n";      var_dump($dataHolder->json); //    echo "\n\n"; $dataHolder->json(JSON_PRETTY_PRINT)
 
-$parser = CsvParser()->withHeader(true);
-echo '$parser->withHeader: ', $parser->withHeader ? 'true' : 'false', "\n\n";
-echo '$parser->withNull: ', $parser->withNull ? 'true' : 'false', "\n\n";
+$parser = CsvParser()->hasHeader(true);
+echo '$parser->hasHeader: ', $parser->hasHeader ? 'true' : 'false', "\n\n";
+echo '$parser->convertToNull: ', $parser->convertToNull ? 'true' : 'false', "\n\n";
 
-$parser->withHeader = true;
-$parser->withNull = true;
+$parser->hasHeader = true;
+$parser->convertToNull = true;
 
 echo "Data Tree:\n\n"; var_dump($parser->makeDataTree($csv)); echo "\n\n";
 
