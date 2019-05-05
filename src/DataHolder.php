@@ -21,24 +21,42 @@ class DataHolder {
         }
     }
 
-    public function addParser(Parser $parser) : void
+    public function addParser(Parser $parser) 
     {
         $this->parser_list[$parser->inputType()] = $parser;
+        return $this;
     }
 
-    public function removeParser(string $name) : void
+    public function hasParser(string $parserOuputType) 
     {
-        unset($this->parser_list[$name]);
+        return isset($this->parser_list[$parserOuputType]);
     }
 
-    public function addConverter(Converter $converter) : void
+    public function removeParser(string $parserOuputType)
+    {
+        if ($this->hasConverter($parserOuputType)){
+            unset($this->parser_list[$parserOuputType]);
+        }
+        return $this;
+    }
+
+    public function addConverter(Converter $converter)
     {
         $this->converter_list[$converter->outputType()] = $converter;
+        return $this;
     }
 
-    public function removeConverter(string $name) : void
+    public function hasConverter(string $converterOuputType) 
     {
-        unset($this->converter_list[$name]);
+        return isset($this->converter_list[$converterOuputType]);
+    }
+
+    public function removeConverter(string $converterOuputType)
+    {
+        if ($this->hasConverter($converterOuputType)){
+            unset($this->converter_list[$converterOuputType]);
+        }
+        return $this;
     }
 
     public function __get($key)
