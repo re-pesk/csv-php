@@ -6,18 +6,19 @@
   "configurations": [
     
     {
-      "name": "Listen for XDebug",
       "type": "php",
       "request": "launch",
+      "name": "Listen for XDebug",
+      "ignore": ["**/vendor/**/*.php"],
       "port": 9000
     },
     {
-      "name": "Launch index.php",
       "type": "php",
       "request": "launch",
+      "name": "Launch index.php",
       "program": "${workspaceRoot}/index.php",
       "ignore": ["**/vendor/**/*.php"],
-      "cwd": "${fileDirname}",
+      "cwd": "${workspaceRoot}",
       "port": 9000
     }
   ]
