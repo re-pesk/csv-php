@@ -6,7 +6,7 @@ use function CsvConverter\{DataHolder, CsvParser, JsonConverter};
 use CsvConverter\JsonConverter;
 
 $jsonConverter = new JsonConverter();
-echo "\$jsonConverter->outputType() === '{$jsonConverter->outputType()}'\n";
+echo "\$jsonConverter->dataType() === '{$jsonConverter->dataType()}'\n";
 
 $csvParser = CsvParser()->parameters([ 'hasHeader' => true, 'convertToNull' => true, 'ignoreInvalidChars' => true ]);
 
@@ -44,8 +44,17 @@ echo "\n";
 echo "Input:\n\n"; var_export($csv); echo "\n\n";
 
 $csvParser = CsvParser()->hasHeader(true)->convertToNull(true);
+$csvParser->parameters = [ 'hasHeader' => true ];
 $dataHolder = DataHolder($csvParser, JsonConverter());
-$dataHolder->csv = $csv;
+echo '$dataHolder->hasParser($csvParser->dataType()) ===', $dataHolder->hasParser($csvParser->dataType());
+// $dataHolder->removeParser('csv');
+// echo '$dataHolder->hasParser($csvParser->dataType()) ===', $dataHolder->hasParser($csvParser->dataType());
+
+
+$dataHolder->csv = 'a,b,"x""y"';
+echo '$dataHolder->dataTree ==='; var_export($dataHolder->dataTree);
+echo '$dataHolder->json ===', $dataHolder->json, "\n";
+echo '$dataHolder->json() ===', $dataHolder->json(), "\n";
 
 $records = $csvParser->makeRecords($csv);
 
