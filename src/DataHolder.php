@@ -23,38 +23,38 @@ class DataHolder {
 
     public function addParser(Parser $parser) 
     {
-        $this->parser_list[$parser->inputType()] = $parser;
+        $this->parser_list[$parser->dataType()] = $parser;
         return $this;
     }
 
-    public function hasParser(string $parserOuputType) 
+    public function hasParser(string $parserDataType) 
     {
-        return isset($this->parser_list[$parserOuputType]);
+        return isset($this->parser_list[$parserDataType]);
     }
 
-    public function removeParser(string $parserOuputType)
+    public function removeParser(string $parserDataType)
     {
-        if ($this->hasConverter($parserOuputType)){
-            unset($this->parser_list[$parserOuputType]);
+        if ($this->hasParser($parserDataType)){
+            unset($this->parser_list[$parserDataType]);
         }
         return $this;
     }
 
     public function addConverter(Converter $converter)
     {
-        $this->converter_list[$converter->outputType()] = $converter;
+        $this->converter_list[$converter->dataType()] = $converter;
         return $this;
     }
 
-    public function hasConverter(string $converterOuputType) 
+    public function hasConverter(string $converterDataType) 
     {
-        return isset($this->converter_list[$converterOuputType]);
+        return isset($this->converter_list[$converterDataType]);
     }
 
-    public function removeConverter(string $converterOuputType)
+    public function removeConverter(string $converterDataType)
     {
-        if ($this->hasConverter($converterOuputType)){
-            unset($this->converter_list[$converterOuputType]);
+        if ($this->hasConverter($converterDataType)){
+            unset($this->converter_list[$converterDataType]);
         }
         return $this;
     }
@@ -65,34 +65,30 @@ class DataHolder {
             return $this->data_tree;
         } elseif(isset($this->converter_list[$key])){
             return $this->converter_list[$key]->convert($this->data_tree);
-        } else {
-            throw new \InvalidArgumentException(
-                "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid preperty name\n"
-            );
-        }
-        return null;
+        } 
+        throw new \InvalidArgumentException(
+            "\n" . __METHOD__ . ".args['key']: converter with type '{$key}' does not exist.\n"
+        );
     }
 
     public function __set($key, $value) 
     {
         if(isset($this->parser_list[$key])){
             $this->data_tree = $this->parser_list[$key]->makeDataTree($value);
-        } else {
-            throw new \InvalidArgumentException(
-                "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid preperty name\n"
-            );
+            return;
         }
+        throw new \InvalidArgumentException(
+            "\n" . __METHOD__ . ".args['key']: parser with type '{$key}' does not exist.\n"
+        );
     }
 
     public function __call($key, $args) {
         if(isset($this->converter_list[$key])){
-            return $this->converter_list[$key]->convert($this->data_tree, ...$args);
-        } else {
-            throw new \InvalidArgumentException(
-                "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid preperty name\n"
-            );
+            return $this->converter_list[$key]->convert($this->data_tree, (count($args) < 1 || is_null($args[0])) ? 0 : $args[0]);
         }
-        return null;
+        throw new \InvalidArgumentException(
+            "\n" . __METHOD__ . ".args['key']: converter with type '{$key}' does not exist.\n"
+        );
     }
 
 }

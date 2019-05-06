@@ -11,9 +11,9 @@ describe("JsonConverter", function(){
       expect($this->jsonConverter)->toBeA('object')->toBeAnInstanceOf('CsvConverter\JsonConverter');
     });
   });
-  describe("->outputType()", function(){
+  describe("->dataType()", function(){
     it("returns type of converted value", function() {
-      expect($this->jsonConverter->outputType())->toBeA('string')->toEqual('json');
+      expect($this->jsonConverter->dataType())->toBeA('string')->toEqual('json');
     });
   });
   describe("->convert()", function(){

@@ -10,7 +10,7 @@ class JsonConverter implements Converter
         return json_encode($dataTree, $flags);
     }
 
-    public function outputType(): string
+    public function dataType(): string
     {
         return 'json';
     }

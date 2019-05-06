@@ -146,31 +146,31 @@ class CsvParser implements Parser
         $this->setParameters($parameters);
     }
 
-    public static function inputType() : string
+    public static function dataType() : string
     {
         return 'csv';
     }
 
     private function getBooleanParameter($key) 
     {
-        if (!isset($this->parameters[$key])) {
-            throw new \InvalidArgumentException(
-                "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid property name!\n"
-            );
+        if (isset($this->parameters[$key])) {
+            return $this->parameters[$key];
         }
-        return $this->parameters[$key];
+        throw new \InvalidArgumentException(
+            "\n" . __METHOD__ . ".args['key']: '{$key}' is not a valid parameter's name!\n"
+        );
     }
 
-    private function setBooleanParameter(string $key, bool $value) 
+    private function setBooleanParameter(string $key, $value) 
     {
-        if (!\is_bool($value)) {
-            throw new \InvalidArgumentException(
-                "\n" . __METHOD__ . '.args["value"]: ' . "'{$key}' accepts only values of boolean type!\n"
-            );
-        }
         if (!isset($this->parameters[$key])) {
             throw new \InvalidArgumentException(
-                "\n" . __METHOD__ . '.args["key"]: ' . "'{$key}' is not a valid property name!\n"
+                "\n" . __METHOD__ . ".args['key']: '{$key}' is not a valid parameter's name!\n"
+            );
+        }
+        if (!is_bool($value)) {
+            throw new \InvalidArgumentException(
+                "\n" . __METHOD__ . ".args['value']: '{$key}' accepts only values of boolean type!\n"
             );
         }
         $this->parameters[$key] = $value;
@@ -208,9 +208,9 @@ class CsvParser implements Parser
         }
     }
 
-    public function __call($key, $value)
+    public function __call($key, $args)
     {
-        $this->__set($key, $value[0]);
+        $this->__set($key, (count($args) < 1 || is_null($args[0])) ? 0 : $args[0]);
         return $this;
     }
 

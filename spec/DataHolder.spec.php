@@ -15,7 +15,7 @@ describe("DataHolder", function(){
     it("adds csv parser to list of available parsers", function() {
       $parser = CsvParser();
       $this->dataHolder->addParser($parser);
-      expect($this->dataHolder->hasParser($parser->inputType()))
+      expect($this->dataHolder->hasParser($parser->dataType()))
         ->toBeA('boolean')
         ->toEqual(true);
     });
@@ -24,11 +24,11 @@ describe("DataHolder", function(){
     it("remove csv parser from list of available parsers", function() {
       $parser = CsvParser();
       $this->dataHolder->addParser($parser);
-      expect($this->dataHolder->hasParser($parser->inputType()))
+      expect($this->dataHolder->hasParser($parser->dataType()))
         ->toBeA('boolean')
         ->toEqual(true);
-      $this->dataHolder->removeParser($parser->inputType());
-      expect($this->dataHolder->hasParser($parser->inputType()))
+      $this->dataHolder->removeParser($parser->dataType());
+      expect($this->dataHolder->hasParser($parser->dataType()))
         ->toBeA('boolean')
         ->toEqual(false);
     });
