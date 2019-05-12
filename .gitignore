@@ -39,3 +39,6 @@ tempCodeRunnerFile.php
 ### CollabNet GitEye
 # Ignore project folder
 /.project
+
+### Ignore samples folder
+/samples
