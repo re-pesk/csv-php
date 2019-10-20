@@ -385,3 +385,24 @@ string(411) "{
     ]
 }"
 ~~~
+
+### How to run
+
+1. Install *php*, *composer* ir *git*.
+2. Clone repository to local storage:
+  ~~~
+  git clone https://github.com/re-pe/csv-php.git
+  ~~~
+3. In the folder of cloned repository, install necessary packages:
+  ~~~
+  cd csv-php
+  composer install
+  ~~~
+4. Run tests:
+  ~~~
+  ./vendor/bin/kahlan
+  ~~~
+5. Run demo of usage:
+  ~~~
+  php index.php
+  ~~~
