@@ -391,6 +391,10 @@ string(411) "{
 1. Install *php*, *composer* ir *git*.
 2. Clone repository to local storage:
   ~~~
+  git clone git@github.com:re-pe/csv-php.git
+  ~~~
+  or
+  ~~~
   git clone https://github.com/re-pe/csv-php.git
   ~~~
 3. In the folder of cloned repository, install necessary packages:
