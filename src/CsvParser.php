@@ -1,4 +1,5 @@
-<?php 
+<?php
+
 declare(strict_types=1);
 
 namespace CsvConverter;
@@ -16,7 +17,7 @@ const CR_NOT_LF = CR . '(?!' . LF . ')';
 const EOL = CRLF . '|' . CR . '|' . LF;
 const DOUBLE_DQUOTE = DQUOTE . '{2}';
 
-const NON_ESCAPED = '(?:' . CR_NOT_LF . '|' . LF . '|' .TEXTDATA . ')' . '+';
+const NON_ESCAPED = '(?:' . CR_NOT_LF . '|' . LF . '|' . TEXTDATA . ')' . '+';
 
 const ESCAPED = DQUOTE . '(?:' . DOUBLE_DQUOTE . '|' . TEXTDATA . '|' .  COMMA . '|' . CR . '|' . LF . ')*' . DQUOTE;
 const HEAD = '(?:' . CRLF . '|' . COMMA . '|' . START . ')';
@@ -50,11 +51,12 @@ function tokenize($data)
     return $tokens;
 }
 
-function convertValue($value, bool $convertToNull) {
-    if (is_null($value)){
+function convertValue($value, bool $convertToNull)
+{
+    if (is_null($value)) {
         return $value;
     }
-    if (!is_string($value)){
+    if (!is_string($value)) {
         return $value;
     }
     if (preg_match(FLOAT_PATTERN, $value) > 0) {
@@ -68,14 +70,14 @@ function convertValue($value, bool $convertToNull) {
     }
     $value = preg_replace(OUTER_QUOTES, '', $value);
     return preg_replace(INNER_QUOTES, '"', $value);
-}  
+}
 
 function tokensToRecords(array $tokens)
 {
     $records = [];
- 
-    array_walk($tokens, function(&$token) use (&$records) {
-        if($token[1][0] !== ','){
+
+    array_walk($tokens, function (&$token) use (&$records) {
+        if ($token[1][0] !== ',') {
             array_push($records, [$token]);
         } else {
             $records[count($records) - 1][] = $token;
@@ -86,21 +88,25 @@ function tokensToRecords(array $tokens)
     return $records;
 }
 
-function checkRecords(array $records, bool $hasHeader) : bool {
+function checkRecords(array $records, bool $hasHeader): bool
+{
     if (count($records) < 1) {
         return false;
     }
     $fieldCount = count($records[0]);
 
-    array_walk($records, function(array $record, $recordNo) use ($fieldCount, $hasHeader) {
-        array_walk($record, function(array $field, $fieldNo) use ($recordNo) {
+    array_walk($records, function (array $record, $recordNo) use ($fieldCount, $hasHeader) {
+        array_walk($record, function (array $field, $fieldNo) use ($recordNo) {
             if ($field[3][0] !== '') {
                 $replaced = preg_replace(['/\r/', '/\n/'], ['\\r', '\\n'], [$field[0][0], $field[3][0]]);
-                throw new \UnexpectedValueException("Record {$recordNo}, field {$fieldNo}: '{$replaced[0]}' has corrupted ending '{$replaced[1]}' at position {$field[3][1]}!");
+                throw new \UnexpectedValueException(
+                    "Record {$recordNo}, field {$fieldNo}: "
+                    . "'{$replaced[0]}' has corrupted ending '{$replaced[1]}' at position {$field[3][1]}!"
+                );
             };
         });
         if ($hasHeader && $recordNo < 1) {
-            array_walk($record, function($field, $fieldNo) {
+            array_walk($record, function ($field, $fieldNo) {
                 if ($field[2][0] === '') {
                     throw new \UnexpectedValueException("Header of field {$fieldNo} is empty!");
                 }
@@ -109,9 +115,9 @@ function checkRecords(array $records, bool $hasHeader) : bool {
                 }
             });
         }
-        if ($recordNo > 0){
+        if ($recordNo > 0) {
             $currentFieldCount = count($record);
-            if ($currentFieldCount > $fieldCount){
+            if ($currentFieldCount > $fieldCount) {
                 throw new \RangeException("#{$recordNo} record has more fields than first record!");
             } elseif (($currentFieldCount < $fieldCount)) {
                 throw new \RangeException("#{$recordNo} record has less fields than first record!");
@@ -119,26 +125,26 @@ function checkRecords(array $records, bool $hasHeader) : bool {
         }
     });
     return true;
-};
+}
 
-function recordsToDataTree(array $records, bool $convertToNull = false) : array
+function recordsToDataTree(array $records, bool $convertToNull = false): array
 {
-    $tree = array_map(function($record) use ($convertToNull){
-        return array_map(function($field) use ($convertToNull){
+    $tree = array_map(function ($record) use ($convertToNull) {
+        return array_map(function ($field) use ($convertToNull) {
             return convertValue($field[2][0], $convertToNull);
         }, $record);
     }, $records);
     return $tree;
-};
+}
 
 class CsvParser implements Parser
 {
     private $parameters = [
-        'hasHeader' => false, 
-        'convertToNull' => false, 
-        'convertToNumber' => false, 
-        'preserveEmptyLine' => false, 
-        'ignoreInvalidChars' => false 
+        'hasHeader' => false,
+        'convertToNull' => false,
+        'convertToNumber' => false,
+        'preserveEmptyLine' => false,
+        'ignoreInvalidChars' => false
     ];
 
     public function __construct(array $parameters = [])
@@ -146,12 +152,12 @@ class CsvParser implements Parser
         $this->setParameters($parameters);
     }
 
-    public static function dataType() : string
+    public static function dataType(): string
     {
         return 'csv';
     }
 
-    private function getBooleanParameter($key) 
+    private function getBooleanParameter($key)
     {
         if (isset($this->parameters[$key])) {
             return $this->parameters[$key];
@@ -161,7 +167,7 @@ class CsvParser implements Parser
         );
     }
 
-    private function setBooleanParameter(string $key, $value) 
+    private function setBooleanParameter(string $key, $value)
     {
         if (!isset($this->parameters[$key])) {
             throw new \InvalidArgumentException(
@@ -177,11 +183,11 @@ class CsvParser implements Parser
     }
 
     private function setParameters(array $values)
-    {   
+    {
         if (count($values) < 1) {
             return;
         }
-        forEach($this->parameters as $key => $value) {
+        foreach ($this->parameters as $key => $value) {
             if (isset($values[$key]) && $values[$key] !== $value) {
                 $this->setBooleanParameter($key, $values[$key]);
             }
@@ -190,21 +196,22 @@ class CsvParser implements Parser
 
     public function __get($key)
     {
-        switch($key){
-            case 'parameters': return $this->parameters;
-            default: { 
+        switch ($key) {
+            case 'parameters':
+                return $this->parameters;
+            default:
                 return $this->getBooleanParameter($key);
-            }
         }
     }
 
     public function __set($key, $value)
     {
-        switch($key){
-            case 'parameters': $this->setParameters($value); break;
-            default: { 
+        switch ($key) {
+            case 'parameters':
+                $this->setParameters($value);
+                break;
+            default:
                 $this->setBooleanParameter($key, $value);
-            }
         }
     }
 
@@ -218,7 +225,7 @@ class CsvParser implements Parser
     {
         $tokens = tokenize($data);
         $records = tokensToRecords($tokens);
-        if (!$this->ignoreInvalidChars){
+        if (!$this->ignoreInvalidChars) {
             checkRecords($records, $this->hasHeader);
         }
         return $records;
@@ -230,5 +237,4 @@ class CsvParser implements Parser
         $tree = recordsToDataTree($records, $this->convertToNull);
         return $tree;
     }
-
 }

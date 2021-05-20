@@ -1,9 +1,10 @@
-<?php 
+<?php
+
 declare(strict_types=1);
 
 namespace CsvConverter;
 
-class JsonConverter implements Converter 
+class JsonConverter implements Converter
 {
     public function convert(array $dataTree, $flags = 0): string
     {
