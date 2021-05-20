@@ -1,24 +1,24 @@
-## Converter from csv to json
+# Converter from csv to json
 
 CSV:
 
-~~~
+```csv
 'field_name_1,"Field
-Name 2",\rfield_name_3\n 
-"aaa","b 
+Name 2",\rfield_name_3\n
+"aaa","b
 ,bb","ccc""ddd"
 zzz,,""
 1,2.2,
 ,3,
 '
-~~~
+```
 
-Records: 
+Records:
 
-Each record consists of 4 parts: all field, head of field (fields or records separator), fields body and tail that if not empty makes field corrupted. 
-Each part has string and position. Positions of all field contains position of than field in input string, position of other parts shows position of the part in the field.  
+Each record consists of 4 parts: all field, head of field (fields or records separator), fields body and tail that if not empty makes field corrupted.
+Each part has string and position. Positions of all field contains position of than field in input string, position of other parts shows position of the part in the field.
 
-~~~
+```php
 array(5) {
   [0] => array(3) {
     [0] => array(4) {
@@ -101,7 +101,7 @@ aaa"
     }
     [1] => array(4) {
       [0] => array(2) {
-        [0] => string(10) ","b 
+        [0] => string(10) ","b
 ,bb""
         [1] => int(51)
       }
@@ -110,7 +110,7 @@ aaa"
         [1] => int(0)
       }
       [2] => array(2) {
-        [0] => string(9) ""b 
+        [0] => string(9) ""b
 ,bb""
         [1] => int(1)
       }
@@ -313,11 +313,11 @@ zzz"
     }
   }
 }
-~~~
+```
 
 Data Tree:
 
-~~~
+```php
 array(2) {
   'header' => array(3) {
     [0] => string(12) "field_name_1"
@@ -328,7 +328,7 @@ Name 2"
   'records' => array(4) {
     [0] => array(3) {
       [0] => string(3) "aaa"
-      [1] => string(6) "b 
+      [1] => string(6) "b
 ,bb"
       [2] => string(7) "ccc"ddd"
     }
@@ -349,12 +349,11 @@ Name 2"
     }
   }
 }
-~~~
-
+```
 
 JSON:
 
-~~~
+```text
 string(411) "{
     "header": [
         "field_name_1",
@@ -384,29 +383,38 @@ string(411) "{
         ]
     ]
 }"
-~~~
+```
 
-### How to run
+## How to run
 
-1. Install *php*, *composer* ir *git*.
+1. Install _php_, _composer_ ir _git_.
 2. Clone repository to local storage:
-  ~~~
-  git clone git@github.com:re-pe/csv-php.git
-  ~~~
-  or
-  ~~~
-  git clone https://github.com/re-pe/csv-php.git
-  ~~~
-3. In the folder of cloned repository, install necessary packages:
-  ~~~
-  cd csv-php
-  composer install
-  ~~~
-4. Run tests:
-  ~~~
-  ./vendor/bin/kahlan
-  ~~~
-5. Run demo of usage:
-  ~~~
-  php index.php
-  ~~~
+
+```bash
+git clone git@github.com:re-pe/csv-php.git
+```
+
+or
+
+```bash
+git clone https://github.com/re-pe/csv-php.git
+```
+
+3.In the folder of cloned repository, install necessary packages:
+
+```bash
+cd csv-php
+composer install
+```
+
+4.Run tests:
+
+```bash
+./vendor/bin/kahlan
+```
+
+5.Run demo of usage:
+
+```bash
+php index.php
+```
